@@ -6,7 +6,7 @@ KORA é uma aplicação desktop em Electron/React com backend Python. O padrão 
 
 - Chat e chamadas de ferramentas via Qwen local (`127.0.0.1:8081/v1`). A personalidade textual usa a configuração conversacional GLaDOS/KORA como referência: clínica, espirituosa e útil primeiro, sem copiar falas ou afirmar ser personagem oficial. Para respeitar o contexto de 4096 tokens do Qwen instalado, a ADA seleciona e compacta ferramentas por intenção; buscas/leitura de skills recebem limites locais, e tarefas de programação podem disponibilizar Codex junto com busca de skills.
 - Tarefas de programação podem ser delegadas ao Codex CLI autenticado, somente após confirmação da tarefa exata. O Codex usa sandbox `workspace-write` no projeto ativo e sessão efêmera; prompts, skills selecionadas e arquivos que ele ler podem ser enviados ao provedor Codex configurado.
-- A ADA pesquisa e carrega sob demanda as skills Hermes/Kora instaladas em `~/.local/share/kora/hermes/skills`. Codex recebe no máximo quatro skills selecionadas para aquela tarefa; skills são orientação, não autorização para efeitos. A execução final depende das ferramentas disponíveis na ADA e continua sujeita a confirmação.
+- A KORA pesquisa e carrega sob demanda as skills Hermes/Kora instaladas em `~/.local/share/kora/hermes/skills`. Codex recebe no máximo quatro skills selecionadas para aquela tarefa; skills são orientação, não autorização para efeitos. A execução final depende das ferramentas disponíveis na ADA e continua sujeita a confirmação.
 - Modo experimental `ADA_CONVERSATION_ENGINE=hermes-acp`: usa o agente ACP Hermes (provider/model do perfil Hermes atual), aplica uma instrução de estilo inspirada no overlay conversacional GLaDOS em português e exibe a instrução + mensagem exatas antes de cada turno enviado. Cada sessão recebe um MCP somente de leitura para catálogo/busca/leitura de skills e, quando há schemas de ferramentas disponíveis, um MCP de ações ADA (`ada_actions`) ligado ao processo principal por socket Unix privado de sessão. Chamadas desse MCP passam pelo `handle_tool_calls` normal da ADA; cada ação com efeitos exige confirmação visível pontual com nome e argumentos antes de executar. A listagem local de tarefas é somente leitura. Não há shell genérico nem concessões permanentes. O Qwen local permanece no modo padrão e não é fallback automático do ACP. Opcional: `ADA_HERMES_PYTHON` aponta para o Python do ambiente Hermes que contém a SDK MCP (padrão: `~/.hermes/hermes-agent/venv/bin/python`).
 - Voz de entrada pelo microfone do browser, com VAD e transcrição `faster-whisper` local. A captura só começa depois do usuário conectar a sessão e desmutar o microfone.
 - Voz de saída `texto → Piper pt-BR (base) → RVC Raphael`. O áudio-base Piper nunca é reproduzido como fallback; se o worker falhar, a resposta em texto continua disponível.
@@ -117,7 +117,7 @@ O `ADA_PROJECT_ROOT` é opcional. Se omitido, os projetos existentes em `repo/pr
 - `ADA_VLM_PORT=8082`
 - `ADA_PIPER_BIN=~/.local/bin/piper`
 
-A ADA não inicia nem troca o servidor de texto do usuário. Inicie o Qwen local antes da sessão. O VLM é iniciado pelo backend apenas quando uma análise de câmera é confirmada ou quando uma tarefa Browser confirmada precisa de resumo visual.
+A KORA não inicia nem troca o servidor de texto do usuário. Inicie o Qwen local antes da sessão. O VLM é iniciado pelo backend apenas quando uma análise de câmera é confirmada ou quando uma tarefa Browser confirmada precisa de resumo visual.
 
 ## Uso
 
@@ -125,9 +125,20 @@ A ADA não inicia nem troca o servidor de texto do usuário. Inicie o Qwen local
 npm run dev
 ```
 
-1. Use o botão Power para conectar a ADA.
+Para iniciar o runtime completo KORA com Qwen local limitado, UI em produção e
+encerramento automático do servidor Qwen ao sair:
+
+```bash
+./scripts/run-kora-runtime.sh
+```
+
+O runtime seleciona o S15 quando o microfone é desmutado. Microfone, câmera e
+motion capture começam desligados. Programação pode ser encaminhada ao Codex
+após confirmação explícita; consulta de skills usa a biblioteca Hermes/Kora.
+
+1. Use o botão Power para conectar a KORA.
 2. Digite no chat para conversar; a persona textual usa o tom conversacional GLaDOS/KORA. A síntese continua usando voz-alvo Raphael via RVC; isso muda a voz sintetizada, não a personalidade escrita.
-3. Para programação, peça claramente uma alteração no projeto ativo. A ADA seleciona skills relevantes e mostra a tarefa exata para confirmação; o prompt, as skills selecionadas e os arquivos lidos pelo Codex podem ser enviados ao provedor Codex autenticado.
+3. Para programação, peça claramente uma alteração no projeto ativo. A KORA seleciona skills relevantes e mostra a tarefa exata para confirmação; o prompt, as skills selecionadas e os arquivos lidos pelo Codex podem ser enviados ao provedor Codex autenticado.
 4. Para orientação de workflows, pergunte sobre o tema; a ADA pesquisa as skills Hermes/Kora locais e lê a skill pertinente. Isso fornece orientação, não executa automaticamente integrações ausentes.
 5. Para falar, desmute o microfone. O VAD envia trechos após pausa; mutar encerra a captura e descarta o trecho parcial.
 6. Para câmera, ligue o preview manualmente. Peça análise visual; aprove a confirmação da ferramenta. Desligar a câmera limpa o frame armazenado.
