@@ -334,6 +334,141 @@ class LanguageModelProcessor:
                 "battery",
                 "power",
                 "load",
+                "stats",
+                "statistics",
+                "specs",
+                "hardware",
+                "computer",
+                "pc",
+                "machine",
+                "processor",
+                "sistema",
+                "sistemas",
+                "computador",
+                "computadores",
+                "carga",
+                "temperatura",
+                "temperaturas",
+                "especificações",
+                "especificacoes",
+                "uso do sistema",
+                "uso do computador",
+            )
+        )
+        wants_memory = any(
+            keyword in text
+            for keyword in (
+                "remember",
+                "recall",
+                "what do you know about me",
+                "what do you know about my",
+                "stored fact",
+                "stored facts",
+                "memory store",
+                "previous conversation",
+                "lembrar",
+                "lembra",
+                "recorda",
+                "o que você lembra",
+                "o que voce lembra",
+                "o que você sabe sobre mim",
+                "o que voce sabe sobre mim",
+                "memória",
+                "memoria",
+                "conversa anterior",
+            )
+        )
+        wants_desktop = any(
+            phrase in text
+            for phrase in (
+                "screen",
+                "desktop",
+                "window",
+                "display",
+                "what's open",
+                "currently open",
+                "open browser",
+                "open the browser",
+                "open terminal",
+                "open the terminal",
+                "open files",
+                "open the files",
+                "open launcher",
+                "switch workspace",
+                "volume up",
+                "volume down",
+                "tela",
+                "área de trabalho",
+                "area de trabalho",
+                "janela",
+                "o que está aberto",
+                "o que esta aberto",
+                "o que está na tela",
+                "o que esta na tela",
+                "abrir navegador",
+                "abra o navegador",
+                "abrir terminal",
+                "abra o terminal",
+                "abrir os arquivos",
+                "abra os arquivos",
+                "abrir lançador",
+                "abrir lancador",
+                "trocar de workspace",
+                "mudar para o workspace",
+                "trocar de área de trabalho",
+                "trocar de area de trabalho",
+                "aumente o volume",
+                "aumentar o volume",
+                "diminua o volume",
+                "diminuir o volume",
+            )
+        )
+        wants_screen = any(
+            phrase in text
+            for phrase in (
+                "screen",
+                "what's open",
+                "currently open",
+                "what's on my screen",
+                "read the screen",
+                "tela",
+                "o que está aberto",
+                "o que esta aberto",
+                "o que está na tela",
+                "o que esta na tela",
+                "leia o conteúdo da tela",
+                "leia o conteudo da tela",
+            )
+        )
+        wants_desktop_action = any(
+            phrase in text
+            for phrase in (
+                "open browser",
+                "open the browser",
+                "open terminal",
+                "open the terminal",
+                "open files",
+                "open the files",
+                "open launcher",
+                "switch workspace",
+                "volume up",
+                "volume down",
+                "abrir navegador",
+                "abra o navegador",
+                "abrir terminal",
+                "abra o terminal",
+                "abrir os arquivos",
+                "abra os arquivos",
+                "abrir lançador",
+                "abrir lancador",
+                "trocar de workspace",
+                "mudar para o workspace",
+                "trocar de área de trabalho",
+                "trocar de area de trabalho",
+                "aumente o volume",
+                "aumentar o volume",
+                "diminua o volume",
+                "diminuir o volume",
             )
         )
         wants_clap = "clap" in text
@@ -342,10 +477,27 @@ class LanguageModelProcessor:
             name = tool.get("function", {}).get("name", "")
             if name == "slow clap" and not wants_clap:
                 continue
-            if name.startswith("mcp.") and not wants_system:
+            if name.startswith("mcp.system_info.") and not wants_system:
+                continue
+            if name.startswith("mcp.memory.") and not wants_memory:
+                continue
+            if name.startswith("mcp.desktop.screen_ocr") and not wants_screen:
+                continue
+            if name.startswith("mcp.desktop.desktop_action") and not wants_desktop_action:
+                continue
+            if name.startswith("mcp.desktop.") and not wants_desktop:
+                continue
+            if name.startswith("mcp.") and not (wants_system or wants_memory or wants_desktop):
                 continue
             filtered.append(tool)
         return filtered
+
+    @staticmethod
+    def _tool_choice_for_message(tools: list[dict[str, Any]]) -> str | None:
+        """Require an MCP call when routing has selected live data/action tools."""
+        if any(tool.get("function", {}).get("name", "").startswith("mcp.") for tool in tools):
+            return "required"
+        return None
 
     def _process_tool_call(
         self,
@@ -700,6 +852,10 @@ class LanguageModelProcessor:
                 }
                 if allow_tools and tools:
                     data["tools"] = tools
+                    tool_choice = self._tool_choice_for_message(tools)
+                    if tool_choice:
+                        # Never allow a weak local model to invent live results.
+                        data["tool_choice"] = tool_choice
 
                 tool_calls_buffer: list[dict[str, Any]] = []
                 sentence_buffer: list[str] = []

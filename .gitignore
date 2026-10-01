@@ -11,6 +11,14 @@ __pycache__/
 build/
 develop-eggs/
 dist/
+node_modules/
+kora-ui/node_modules
+kora-ui/node_modules/
+kora-ui/dist/
+kora-ui/public/mediapipe/wasm/
+kora-ui/.env
+kora-ui/.env.*
+!kora-ui/.env.example
 downloads/
 eggs/
 .eggs/

@@ -1,0 +1,29 @@
+# Python 3.12 CPU-only speech runtime for Applio RVC + faster-whisper.
+# Install with PyPI as primary and the official PyTorch CPU index as extra:
+#   uv pip install --python "$ADA_DATA_DIR/rvc-venv/bin/python" \
+#     --index-url https://pypi.org/simple \
+#     --extra-index-url https://download.pytorch.org/whl/cpu \
+#     --index-strategy unsafe-best-match -r backend/requirements-voice-cpu.txt
+# This environment performs inference only; no CUDA/ZLUDA or training stack.
+torch==2.11.0+cpu
+torchaudio==2.11.0+cpu
+numpy==2.4.6
+librosa==0.11.0
+scipy==1.18.0
+soundfile==0.14.0
+noisereduce==3.0.3
+pedalboard==0.9.24
+soxr==1.1.0
+faiss-cpu==1.14.3
+torchcrepe==0.0.24
+torchfcpe==0.0.4
+einops==0.8.2
+transformers==5.13.1
+swift-f0==0.3.0
+onnxruntime==1.26.0
+wget==3.2
+resampy==0.4.3
+faster-whisper==1.2.1
+av==18.0.0
+local-attention==1.11.2
+requests==2.34.2

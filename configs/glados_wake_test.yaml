@@ -1,0 +1,5 @@
+Glados:
+  wake_word: "GLaDOS"
+  input_mode: "audio"
+  asr_muted: false
+  tts_enabled: true

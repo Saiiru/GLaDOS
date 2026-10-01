@@ -1,0 +1,42 @@
+{
+  "name": "kora-ui",
+  "version": "1.0.0",
+  "description": "KORA desktop interface - Electron/React voice and tools UI",
+  "main": "electron/main.js",
+  "scripts": {
+    "predev": "node scripts/copy-mediapipe-wasm.cjs",
+    "prebuild": "node scripts/copy-mediapipe-wasm.cjs",
+    "dev": "cross-env NODE_ENV=development concurrently -k \"vite\" \"wait-on tcp:5173 && npx electron .\"",
+    "build": "vite build",
+    "test:ui": "node scripts/run-ui-tests.cjs",
+    "start": "cross-env NODE_ENV=production npx electron ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@mediapipe/tasks-vision": "^0.10.22-rc.20250304",
+    "@react-three/drei": "^9.99.0",
+    "@react-three/fiber": "^8.15.16",
+    "@types/three": "^0.160.0",
+    "clsx": "^2.1.0",
+    "framer-motion": "^11.0.0",
+    "lucide-react": "^0.300.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "socket.io-client": "^4.7.4",
+    "tailwind-merge": "^2.2.0",
+    "three": "^0.160.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.1.1",
+    "autoprefixer": "^10.4.17",
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
+    "electron": "^44.5.1",
+    "postcss": "^8.4.35",
+    "tailwindcss": "^3.4.1",
+    "vite": "^8.3.1",
+    "wait-on": "^7.2.0"
+  }
+}

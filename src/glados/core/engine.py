@@ -1056,6 +1056,10 @@ class Glados:
         self.processing_active_event.set()
         return True
 
+    def conversation_snapshot(self) -> list[dict[str, Any]]:
+        """Return a read-only snapshot for UI adapters and observability."""
+        return self._conversation_store.snapshot()
+
     def autonomy_inflight(self) -> int:
         return self._autonomy_inflight.value()
 
