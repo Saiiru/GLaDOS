@@ -5,6 +5,7 @@ ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)"
 MODEL="${KORA_QWEN_MODEL:-/srv/homelab/models/Qwen_Qwen3-1.7B-Q4_K_M.gguf}"
 QWEN_UNIT="kora-qwen-runtime"
 QWEN_PORT="${KORA_QWEN_PORT:-8081}"
+OWN_QWEN=0
 
 if ! command -v systemd-run >/dev/null 2>&1; then
   printf '%s\n' 'systemd-run is required for the bounded KORA runtime.' >&2
@@ -14,24 +15,30 @@ if [ ! -r "$MODEL" ]; then
   printf 'Qwen model not found: %s\n' "$MODEL" >&2
   exit 1
 fi
-if ss -ltn 2>/dev/null | grep -q ":${QWEN_PORT} "; then
-  printf 'Port %s is already occupied; refusing to attach to an unknown model server.\n' "$QWEN_PORT" >&2
-  exit 1
-fi
-
 cleanup() {
-  systemctl --user stop "${QWEN_UNIT}.service" >/dev/null 2>&1 || true
+  if [ "$OWN_QWEN" -eq 1 ]; then
+    systemctl --user stop "${QWEN_UNIT}.service" >/dev/null 2>&1 || true
+  fi
 }
 trap cleanup EXIT INT TERM
 
-systemd-run --user --unit="$QWEN_UNIT" --collect \
-  -p MemoryHigh=3G -p MemoryMax=4G -p TasksMax=256 \
-  /usr/bin/llama-server \
-  --model "$MODEL" \
-  --host 127.0.0.1 --port "$QWEN_PORT" \
-  --n-gpu-layers "${KORA_QWEN_GPU_LAYERS:-20}" \
-  --ctx-size "${KORA_QWEN_CTX:-8192}" \
-  --threads "${KORA_QWEN_THREADS:-8}"
+if curl -fsS --max-time 2 "http://127.0.0.1:${QWEN_PORT}/v1/models" >/dev/null 2>&1; then
+  printf 'Reusing healthy Qwen server on 127.0.0.1:%s.\n' "$QWEN_PORT"
+else
+  if ss -ltn 2>/dev/null | grep -q ":${QWEN_PORT} "; then
+    printf 'Port %s is occupied by a non-Qwen service; refusing to attach.\n' "$QWEN_PORT" >&2
+    exit 1
+  fi
+  OWN_QWEN=1
+  systemd-run --user --unit="$QWEN_UNIT" --collect \
+    -p MemoryHigh=3G -p MemoryMax=4G -p TasksMax=256 \
+    /usr/bin/llama-server \
+    --model "$MODEL" \
+    --host 127.0.0.1 --port "$QWEN_PORT" \
+    --n-gpu-layers "${KORA_QWEN_GPU_LAYERS:-20}" \
+    --ctx-size "${KORA_QWEN_CTX:-8192}" \
+    --threads "${KORA_QWEN_THREADS:-8}"
+fi
 
 for _ in $(seq 1 60); do
   if curl -fsS --max-time 1 "http://127.0.0.1:${QWEN_PORT}/v1/models" >/dev/null 2>&1; then
