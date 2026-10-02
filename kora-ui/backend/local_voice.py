@@ -22,7 +22,7 @@ class AudioWorker:
         self.env = {k: os.environ[k] for k in ('HOME', 'PATH', 'LANG', 'LC_ALL', 'SYSTEMROOT') if k in os.environ}
         self.env.update(HF_HUB_OFFLINE='1', TRANSFORMERS_OFFLINE='1', CUDA_VISIBLE_DEVICES='',
                         TORCH_FORCE_WEIGHTS_ONLY_LOAD='1', OMP_NUM_THREADS='4',
-                        ADA_DATA_DIR=str(self.data_dir))
+                        ADA_DATA_DIR=str(self.data_dir), KORA_TTS_BASE='glados')
         if os.environ.get('ADA_PIPER_BIN'):
             self.env['ADA_PIPER_BIN'] = os.environ['ADA_PIPER_BIN']
         self.process = None

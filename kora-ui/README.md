@@ -8,8 +8,8 @@ KORA é uma aplicação desktop em Electron/React com backend Python. O padrão 
 - Tarefas de programação podem ser delegadas ao Codex CLI autenticado, somente após confirmação da tarefa exata. O Codex usa sandbox `workspace-write` no projeto ativo e sessão efêmera; prompts, skills selecionadas e arquivos que ele ler podem ser enviados ao provedor Codex configurado.
 - A KORA pesquisa e carrega sob demanda as skills Hermes/Kora instaladas em `~/.local/share/kora/hermes/skills`. Codex recebe no máximo quatro skills selecionadas para aquela tarefa; skills são orientação, não autorização para efeitos. A execução final depende das ferramentas disponíveis na ADA e continua sujeita a confirmação.
 - Modo experimental `ADA_CONVERSATION_ENGINE=hermes-acp`: usa o agente ACP Hermes (provider/model do perfil Hermes atual), aplica uma instrução de estilo inspirada no overlay conversacional GLaDOS em português e exibe a instrução + mensagem exatas antes de cada turno enviado. Cada sessão recebe um MCP somente de leitura para catálogo/busca/leitura de skills e, quando há schemas de ferramentas disponíveis, um MCP de ações ADA (`ada_actions`) ligado ao processo principal por socket Unix privado de sessão. Chamadas desse MCP passam pelo `handle_tool_calls` normal da ADA; cada ação com efeitos exige confirmação visível pontual com nome e argumentos antes de executar. A listagem local de tarefas é somente leitura. Não há shell genérico nem concessões permanentes. O Qwen local permanece no modo padrão e não é fallback automático do ACP. Opcional: `ADA_HERMES_PYTHON` aponta para o Python do ambiente Hermes que contém a SDK MCP (padrão: `~/.hermes/hermes-agent/venv/bin/python`).
-- Voz de entrada pelo microfone do browser, com VAD e transcrição `faster-whisper` local. A captura só começa depois do usuário conectar a sessão e desmutar o microfone.
-- Voz de saída `texto → Piper pt-BR (base) → RVC Raphael`. O áudio-base Piper nunca é reproduzido como fallback; se o worker falhar, a resposta em texto continua disponível.
+- Voz de entrada pelo microfone do browser, com VAD e transcrição `faster-whisper` local. A captura só começa depois do usuário conectar a sessão e desmutar o microfone. Português é aceito como entrada.
+- Voz de saída em inglês `texto → GLaDOS TTS inglês (base) → RVC Raphael`. A resposta textual e falada permanecem em inglês; o áudio-base nunca é reproduzido como fallback.
 - Análise visual local, sob demanda: câmera ligada manualmente + confirmação da ferramenta `analyze_camera` → Qwen3-VL local em CPU, loopback `127.0.0.1:8082`. O mesmo VLM resume screenshots durante uma tarefa de browser já confirmada. O servidor visual é iniciado apenas quando necessário e encerra com a sessão; frames ficam em memória e são limpos ao desligar a câmera.
 - CAD declarativo em JSON e sólidos `build123d` com primitivas permitidas; o conteúdo do modelo não é executado como Python ou shell.
 - Browser agent usando observações DOM/texto + resumo visual local e ações Playwright confirmadas. Kasa, impressoras, projetos e arquivos mantêm seus fluxos e confirmações.
@@ -25,7 +25,7 @@ React/Electron
   ├─ texto ───────────► Python/LocalSession ─► Qwen OpenAI-compatible (8081)
   ├─ voz opt-in ──────► MediaRecorder/VAD ───► worker isolado
   │                                             ├─ faster-whisper (STT)
-  │                                             └─ Piper pt-BR ─► Applio/RVC Raphael ─► WAV
+  │                                             └─ GLaDOS TTS inglês ─► Applio/RVC Raphael ─► WAV
   └─ câmera opt-in ───► frame em memória ─────► ferramenta confirmada ─► Qwen3-VL (8082)
   ├─ skills Hermes/Kora ► busca/leitura local somente leitura
   └─ programação ──────► Codex CLI (sandbox no projeto; confirmação explícita)

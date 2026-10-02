@@ -54,10 +54,13 @@ fi
 cd "$ROOT_DIR"
 export KORA_CONVERSATION_ENGINE=local
 export KORA_QWEN_PORT="$QWEN_PORT"
+export KORA_PROJECT_ROOT="${KORA_PROJECT_ROOT:-$HOME/.local/share/kora/workspace}"
+export KORA_PROJECT="${KORA_PROJECT:-default}"
 export NODE_ENV=production
 
 systemd-run --user --scope \
   -p MemoryHigh=2G -p MemoryMax=3G -p TasksMax=512 \
   /usr/bin/env KORA_CONVERSATION_ENGINE="$KORA_CONVERSATION_ENGINE" \
-    KORA_QWEN_PORT="$KORA_QWEN_PORT" NODE_ENV="$NODE_ENV" \
+    KORA_QWEN_PORT="$KORA_QWEN_PORT" KORA_PROJECT_ROOT="$KORA_PROJECT_ROOT" \
+    KORA_PROJECT="$KORA_PROJECT" NODE_ENV="$NODE_ENV" \
     "$ROOT_DIR/node_modules/.bin/electron" .

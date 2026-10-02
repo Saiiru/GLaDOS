@@ -38,9 +38,11 @@ def deny_network():
 class SpeechEngine:
     def __init__(self, piper=None, rvc=None):
         self.piper = piper or self.run_piper
+        self.use_custom_piper = piper is not None
         self.rvc = rvc or self.run_rvc
         self.whisper = None
         self.converter = None
+        self.glados_tts = None
 
     def run_piper(self, text, output):
         model = ROOT / 'voices/pt_BR-faber-medium.onnx'
@@ -55,6 +57,22 @@ class SpeechEngine:
                         '--config', str(config), '--output_file', str(output)],
                        input=text.encode(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                        check=True, timeout=60)
+
+    def run_glados_tts(self, text, output):
+        """Generate an English base WAV using the vendored KORA/GLaDOS TTS."""
+        import sys
+        import soundfile as sf
+
+        repository_src = Path(__file__).resolve().parents[2] / 'src'
+        if str(repository_src) not in sys.path:
+            sys.path.insert(0, str(repository_src))
+        if self.glados_tts is None:
+            from glados.TTS.tts_glados import SpeechSynthesizer
+            self.glados_tts = SpeechSynthesizer()
+        audio = self.glados_tts.generate_speech_audio(text)
+        if audio.size == 0:
+            raise RuntimeError('GLaDOS English TTS returned empty audio')
+        sf.write(str(output), audio, self.glados_tts.sample_rate, subtype='PCM_16')
 
     def run_rvc(self, source, output):
         applio = ROOT / 'applio-source'
@@ -106,7 +124,10 @@ class SpeechEngine:
                 if not isinstance(text, str) or not 0 < len(text) <= 4000:
                     raise ValueError('Invalid speech text')
                 source, output = directory / 'base.wav', directory / 'raphael.wav'
-                self.piper(text, source)
+                if self.use_custom_piper or os.environ.get('KORA_TTS_BASE', 'glados').strip().casefold() == 'piper':
+                    self.piper(text, source)
+                else:
+                    self.run_glados_tts(text, source)
                 self.rvc(source, output)
                 if not 44 <= output.stat().st_size <= MAX_AUDIO_BYTES:
                     raise ValueError('Invalid converted audio size')

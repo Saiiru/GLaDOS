@@ -6,19 +6,19 @@ from pathlib import Path
 
 class ProjectManager:
     def __init__(self, workspace_root: str):
-        self.workspace_root = Path(workspace_root)
+        self.workspace_root = Path(workspace_root).expanduser()
         self.projects_dir = self.workspace_root / "projects"
-        self.current_project = "temp"
+        self.current_project = os.environ.get("KORA_PROJECT", os.environ.get("ADA_PROJECT", "default")).strip() or "default"
         
         # Ensure projects root exists
         if not self.projects_dir.exists():
             self.projects_dir.mkdir(parents=True)
             
         # Preserve existing user project data; create only missing directories.
-        temp_path = self.projects_dir / "temp"
-        temp_path.mkdir(parents=True, exist_ok=True)
-        (temp_path / "cad").mkdir(exist_ok=True)
-        (temp_path / "browser").mkdir(exist_ok=True)
+        project_path = self.projects_dir / self.current_project
+        project_path.mkdir(parents=True, exist_ok=True)
+        (project_path / "cad").mkdir(exist_ok=True)
+        (project_path / "browser").mkdir(exist_ok=True)
 
     def create_project(self, name: str):
         """Creates a new project directory with subfolders."""

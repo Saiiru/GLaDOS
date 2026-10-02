@@ -275,7 +275,10 @@ class AudioLoop:
         # Using abspath of current file to find root
         current_dir = os.path.dirname(os.path.abspath(__file__))
         # If ada.py is in backend/, project root is one up
-        project_root = os.path.dirname(current_dir)
+        project_root = os.path.expanduser(os.environ.get(
+            'KORA_PROJECT_ROOT',
+            os.environ.get('ADA_PROJECT_ROOT', '~/.local/share/kora/workspace'),
+        ))
         configured_project_root = os.environ.get('ADA_PROJECT_ROOT')
         if configured_project_root:
             project_root = os.path.expanduser(configured_project_root)

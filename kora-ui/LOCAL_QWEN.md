@@ -11,10 +11,10 @@ Este documento complementa o README com as fronteiras entre processos e verifica
 
 ## Voz isolada
 
-- A UI abre `getUserMedia` apenas quando a sessão está ligada e o botão do microfone foi desmutado.
+- A UI abre `getUserMedia` apenas quando a sessão está ligada e o botão do microfone foi desmutado. Português pode ser falado; KORA responde sempre em inglês.
 - `src/voiceCapture.mjs` faz VAD e produz segmentos WebM limitados a 8 MiB/12 s. Mutar descarta um trecho parcial; não há buffer de áudio persistido.
 - `backend/local_voice.py` inicia `backend/audio_worker.py` sob demanda por NDJSON. O worker fica em Python 3.12 separado e recebe somente `HOME`, `PATH`, localização de assets e flags offline; chaves de API não são herdadas.
-- Entrada: faster-whisper-base local, CPU int8, transcrição em português. Saída: Piper pt-BR como áudio-base → Applio/RVC Raphael → WAV; não há fallback para tocar a voz-base.
+- Entrada: faster-whisper-base local, CPU int8, transcrição em português. Saída: GLaDOS TTS inglês como áudio-base → Applio/RVC Raphael → WAV; não há fallback para tocar a voz-base.
 - Seccomp bloqueia rede no processo de áudio. Checkpoints, índices, embedder e modelos ficam em `ADA_DATA_DIR`, fora do Git.
 
 ## Câmera/VLM sob demanda
