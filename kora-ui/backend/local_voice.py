@@ -61,7 +61,11 @@ class AudioWorker:
     async def transcribe(self, audio):
         if not isinstance(audio, bytes) or not 0 < len(audio) <= MAX_AUDIO_BYTES:
             raise VoiceError('Microphone utterance must be between 1 byte and 8 MiB.')
-        result = await self.request('transcribe', audio=base64.b64encode(audio).decode())
+        encoded = base64.b64encode(audio).decode()
+        try:
+            result = await self.request('transcribe', audio=encoded)
+        except VoiceError:
+            result = await self.request('transcribe', audio=encoded)
         if not isinstance(result.get('text'), str) or len(result['text']) > 16000:
             raise VoiceError('Invalid local transcription response.')
         return result['text']
@@ -69,7 +73,12 @@ class AudioWorker:
     async def speak(self, text):
         if not isinstance(text, str) or not 0 < len(text) <= 4000:
             raise VoiceError('Speech replies are limited to 4000 characters; read the full reply in chat.')
-        result = await self.request('speak', text=text)
+        try:
+            result = await self.request('speak', text=text)
+        except VoiceError:
+            # Native TTS/RVC imports can fail during the first worker warm-up.
+            # Restart the isolated worker once before surfacing the error.
+            result = await self.request('speak', text=text)
         try:
             audio = base64.b64decode(result['audio'], validate=True)
             if not 44 <= len(audio) <= MAX_AUDIO_BYTES or audio[:4] != b'RIFF' or audio[8:12] != b'WAVE':
