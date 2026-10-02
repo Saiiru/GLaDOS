@@ -308,7 +308,8 @@ async def start_audio(sid, data=None):
     def on_transcription(data):
         # data = {"sender": "User"|"ADA", "text": "..."}
         asyncio.create_task(sio.emit('transcription', data, room=sid))
-        if data.get('sender') == 'ADA' and data.get('text'):
+        # KORA is the canonical assistant sender; ADA remains a legacy compatibility value.
+        if data.get('sender') in {'KORA', 'ADA'} and data.get('text'):
             voice.schedule_reply(data['text'])
 
     # Callback to send Confirmation Request to frontend
